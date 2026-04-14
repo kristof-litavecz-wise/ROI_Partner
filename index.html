@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ROI Partner — BizOps Investment Model</title>
+<style>
+  :root {
+    --slate: #1E2A38;
+    --green: #2E7D5B;
+    --amber: #C89B3C;
+    --red: #B94A48;
+    --bg: #F7F8FA;
+    --card: #FFFFFF;
+    --border: #E2E5EA;
+    --text: #1E2A38;
+    --muted: #6B7280;
+    --input-bg: #F9FAFB;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+  }
+
+  header {
+    background: var(--slate);
+    color: #fff;
+    padding: 24px 32px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  header h1 { font-size: 20px; font-weight: 600; }
+  header p { font-size: 13px; color: #94A3B8; margin-top: 4px; }
+
+  .container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 32px 20px 80px;
+  }
+
+  /* Steps / progress */
+  .steps {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 32px;
+    flex-wrap: wrap;
+  }
+  .steps button {
+    flex: 1;
+    min-width: 60px;
+    padding: 8px 4px;
+    font-size: 11px;
+    font-weight: 600;
+    border: 2px solid var(--border);
+    border-radius: 6px;
+    background: var(--card);
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .steps button.active {
+    border-color: var(--slate);
+    background: var(--slate);
+    color: #fff;
+  }
+  .steps button.done {
+    border-color: var(--green);
+    color: var(--green);
+  }
+
+  /* Sections */
+  .section {
+    display: none;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 32px;
+    margin-bottom: 24px;
+  }
+  .section.visible { display: block; }
+
+  .section h2 {
+    font-size: 18px;
+    margin-bottom: 4px;
+  }
+  .section .subtitle {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 24px;
+  }
+
+  /* Form fields */
+  .field { margin-bottom: 20px; }
+  .field label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: var(--text);
+  }
+  .field label .hint {
+    font-weight: 400;
+    color: var(--muted);
+    font-size: 12px;
+  }
+  .field input, .field select, .field textarea {
+    width: 100%;
+    padding: 10px 12px;
+    font-size: 14px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--input-bg);
+    color: var(--text);
+    font-family: inherit;
+  }
+  .field textarea { resize: vertical; min-height: 80px; }
+  .field input:focus, .field select:focus, .field textarea:focus {
+    outline: none;
+    border-color: var(--slate);
+    box-shadow: 0 0 0 3px rgba(30,42,56,0.1);
+  }
+
+  /* System rules table */
+  .rules-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+    margin-bottom: 16px;
+  }
+  .rules-table th {
+    background: var(--slate);
+    color: #fff;
+    padding: 10px 14px;
+    text-align: left;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .rules-table td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .rules-table tr:last-child td { border-bottom: none; }
+  .lock-badge {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 4px;
+    background: #FEE2E2;
+    color: var(--red);
+  }
+
+  /* Banner */
+  .banner {
+    background: #FFF3CD;
+    border: 1px solid #FFEAA7;
+    color: #856404;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    margin-bottom: 20px;
+  }
+
+  /* Reflection prompts */
+  .reflection-prompt {
+    background: var(--input-bg);
+    border-left: 3px solid var(--slate);
+    padding: 12px 16px;
+    margin-bottom: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: 0 8px 8px 0;
+  }
+
+  /* ROI result cards */
+  .roi-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .roi-card {
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+  }
+  .roi-card.full { grid-column: 1 / -1; }
+  .roi-card .label {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+    opacity: 0.85;
+  }
+  .roi-card .value {
+    font-size: 32px;
+    font-weight: 700;
+  }
+  .roi-card.green  { background: var(--green); color: #fff; }
+  .roi-card.amber  { background: var(--amber); color: #fff; }
+  .roi-card.red    { background: var(--red); color: #fff; }
+  .roi-card.neutral { background: var(--input-bg); color: var(--text); border: 1px solid var(--border); }
+
+  .recommendation-badge {
+    display: inline-block;
+    padding: 8px 24px;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 700;
+    color: #fff;
+    margin-top: 8px;
+  }
+
+  /* Navigation buttons */
+  .nav-buttons {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 28px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+  }
+  .btn {
+    padding: 10px 24px;
+    font-size: 14px;
+    font-weight: 600;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+  }
+  .btn-secondary {
+    background: var(--input-bg);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .btn-secondary:hover { background: #E5E7EB; }
+  .btn-primary {
+    background: var(--slate);
+    color: #fff;
+  }
+  .btn-primary:hover { background: #2D3E50; }
+  .btn-export {
+    background: var(--green);
+    color: #fff;
+    padding: 12px 32px;
+    font-size: 15px;
+  }
+  .btn-export:hover { opacity: 0.9; }
+
+  /* Memo output */
+  .memo {
+    background: #fff;
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    padding: 32px;
+    margin-top: 20px;
+  }
+  .memo h3 {
+    font-size: 16px;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid var(--slate);
+  }
+  .memo-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 14px;
+  }
+  .memo-row:last-child { border-bottom: none; }
+  .memo-row .memo-label { color: var(--muted); font-weight: 500; }
+  .memo-row .memo-value { font-weight: 600; text-align: right; }
+
+  /* Print / export styling */
+  @media print {
+    header, .steps, .nav-buttons, .btn-export, .no-print { display: none !important; }
+    .section { display: none !important; }
+    .section.print-target { display: block !important; border: none; box-shadow: none; }
+    body { background: #fff; }
+    .container { max-width: 100%; padding: 0; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>ROI Partner</h1>
+  <p>BizOps Investment Model — Standardized hiring justification tool</p>
+</header>
+
+<div class="container">
+
+  <!-- Step indicators -->
+  <div class="steps" id="stepNav">
+    <button data-step="0" class="active">System</button>
+    <button data-step="1">Problem</button>
+    <button data-step="2">Path</button>
+    <button data-step="3">Model</button>
+    <button data-step="4">Cost</button>
+    <button data-step="5">ROI</button>
+    <button data-step="6">Sensitivity</button>
+    <button data-step="7">Reflection</button>
+    <button data-step="8">Memo</button>
+  </div>
+
+  <!-- 0: SYSTEM RULES -->
+  <div class="section visible" id="step-0">
+    <h2>System Rules</h2>
+    <p class="subtitle">Locked assumptions ensuring comparability across all BizOps cases</p>
+    <div class="banner">⚠️ These assumptions are standardized and cannot be modified. They ensure comparability across all BizOps cases.</div>
+    <table class="rules-table">
+      <tr><th>Parameter</th><th>Value</th><th>Status</th></tr>
+      <tr><td>Contact Cost</td><td>£50</td><td><span class="lock-badge">LOCKED</span></td></tr>
+      <tr><td>XCCY Take Rate</td><td>0.006</td><td><span class="lock-badge">LOCKED</span></td></tr>
+      <tr><td>Annualization Factor</td><td>12</td><td><span class="lock-badge">LOCKED</span></td></tr>
+      <tr><td>Fully Loaded Multiplier</td><td>1.3×</td><td><span class="lock-badge">LOCKED</span></td></tr>
+      <tr><td>Case Cost (Standard)</td><td>TBD</td><td><span class="lock-badge">LOCKED</span></td></tr>
+    </table>
+    <div class="nav-buttons">
+      <span></span>
+      <button class="btn btn-primary" onclick="goStep(1)">Start →</button>
+    </div>
+  </div>
+
+  <!-- 1: INPUT PROBLEM -->
+  <div class="section" id="step-1">
+    <h2>Define the Problem</h2>
+    <p class="subtitle">Be specific and measurable. No vague phrasing like "efficiency improvement".</p>
+    <div class="field">
+      <label>Problem Statement <span class="hint">— must be measurable</span></label>
+      <textarea id="problemStatement" placeholder="e.g. Manual reconciliation of XCCY trades takes 4 hours per day across the team"></textarea>
+    </div>
+    <div class="field">
+      <label>Metric Impacted</label>
+      <select id="metricImpacted">
+        <option value="">Select…</option>
+        <option>Time</option>
+        <option>Cost</option>
+        <option>Revenue</option>
+        <option>Risk</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Baseline Value</label>
+      <input type="number" id="baselineValue" placeholder="Current state (e.g. 4)">
+    </div>
+    <div class="field">
+      <label>Target Value</label>
+      <input type="number" id="targetValue" placeholder="Desired state (e.g. 1)">
+    </div>
+    <div class="field">
+      <label>Annual Volume</label>
+      <input type="number" id="annualVolume" placeholder="e.g. 52000">
+    </div>
+    <div class="field">
+      <label>Annual Financial Impact (£)</label>
+      <input type="number" id="annualImpact" placeholder="e.g. 120000">
+    </div>
+    <div class="nav-buttons">
+      <button class="btn btn-secondary" onclick="goStep(0)">← Back</button>
+      <button class="btn btn-primary" onclick="goStep(2)">Next →</button>
+    </div>
+  </div>
+
+  <!-- 2: VALUE PATH -->
+  <div class="section" id="step-2">
+    <h2>Select Value Path</h2>
+    <p class="subtitle">Only ONE path allowed. No blending models.</p>
+    <div class="field">
+      <label>Value Path</label>
+      <select id="valuePath" onchange="updateModelVisibility()">
+        <option value="">Select…</option>
+        <option value="Efficiency">Efficiency</option>
+        <option value="Growth">Growth</option>
+        <option value="Risk">Risk</option>
+      </select>
+    </div>
+    <div class="nav-buttons">
+      <button class="btn btn-secondary" onclick="goStep(1)">← Back</button>
+      <button class="btn btn-primary" onclick="goStep(3)">Next →</button>
+    </div>
+  </div>
+
+  <!-- 3: MODEL (Efficiency or Growth) -->
+  <div class="section" id="step-3">
+    <h2 id="modelTitle">Value Model</h2>
+    <p class="subtitle" id="modelSubtitle">Fill in the inputs for your selected value path.</p>
+
+    <div id="efficiencyModel">
+      <div class="field">
+        <label>Contacts Reduced <span class="hint">— annual volume</span></label>
+        <input type="number" id="contactsReduced" placeholder="e.g. 10000">
+      </div>
+      <div class="field">
+        <label>Cases Reduced <span class="hint">— annual volume</span></label>
+        <input type="number" id="casesReduced" placeholder="e.g. 500">
+      </div>
+      <div class="field">
+        <label>Case Cost (£) <span class="hint">— cost per case</span></label>
+        <input type="number" id="caseCost" placeholder="e.g. 25">
+      </div>
+    </div>
+
+    <div id="growthModel" style="display:none;">
+      <div class="field">
+        <label>XCCY Volume <span class="hint">— monthly transaction volume</span></label>
+        <input type="number" id="xccyVolume" placeholder="e.g. 5000000">
+      </div>
+    </div>
+
+    <div id="riskModel" style="display:none;">
+      <div class="banner">Risk path uses the Annual Financial Impact from Step 1 as the value basis.</div>
+    </div>
+
+    <div class="nav-buttons">
+      <button class="btn btn-secondary" onclick="goStep(2)">← Back</button>
+      <button class="btn btn-primary" onclick="goStep(4)">Next →</button>
+    </div>
+  </div>
+
+  <!-- 4: COST MODEL -->
+  <div class="section" id="step-4">
+    <h2>Cost Model</h2>
+    <p class="subtitle">Enter the details of the role you're justifying.</p>
+    <div class="field">
+      <label>Role Level</label>
+      <select id="roleLevel">
+        <option value="">Select…</option>
+        <option>Analyst</option>
+        <option>Associate</option>
+        <option>Manager</option>
+        <option>Senior Manager</option>
+        <option>Director</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Base Salary (£)</label>
+      <input type="number" id="baseSalary" placeholder="e.g. 55000">
+    </div>
+    <div class="field">
+      <label>Fully Loaded Cost (£) <span class="hint">— auto-calculated at 1.3×</span></label>
+      <input type="text" id="fullyLoadedCost" readonly style="background:#E5E7EB; font-weight:600;">
+    </div>
+    <div class="nav-buttons">
+      <button class="btn btn-secondary" onclick="goStep(3)">← Back</button>
+      <button class="btn btn-primary" onclick="goStep(5)">Next →</button>
+    </div>
+  </div>
+
+  <!-- 5: ROI ENGINE -->
+  <div class="section" id="step-5">
+    <h2>ROI Engine</h2>
+    <p class="subtitle">Automatically calculated from your inputs.</p>
+    <div class="roi-grid" id="roiGrid">
+      <div class="roi-card neutral">
+        <div class="label">Value Path</div>
+        <div class="value" id="roiPath">—</div>
+      </div>
+      <div class="roi-card neutral">
+        <div class="label">Annual Value</div>
+        <div class="value" id="roiAnnualValue">—</div>
+      </div>
+      <div class="roi-card" id="roiExpectedCard">
+        <div class="label">ROI Expected</div>
+        <div class="value" id="roiExpected">—</div>
+      </div>
+      <div class="roi-card" id="roiConservativeCard">
+        <div class="label">ROI Conservative (70%)</div>
+        <div class="value" id="roiConservative">—</div>
+      </div>
+    </div>
+    <div style="text-align:center;">
+      <div style="font-size:13px; color:var(--muted); margin-bottom:8px;">Recommendation</div>
+      <span class="recommendation-badge" id="roiRecommendation">—</span>
+    </div>
+    <div class="nav-buttons">
+      <button class="btn btn-secondary" onclick="goStep(4)">← Back</button>
+      <button class="btn btn-primary" onclick="goStep(6)">Next →</button>
+    </div>
+  </div>
+
+  <!-- 6: SENSITIVITY -->
+  <div class="section" id="step-6">
+    <h2>Sensitivity Analysis</h2>
+    <p class="subtitle">Identify what changes ROI most significantly.</p>
+    <div class="field">
+      <label>Primary Driver</label>
+      <input type="text" id="primaryDriver" placeholder="e.g. Contact volume reduction">
+    </div>
+    <div class="field">
+      <label>Most Sensitive Variable</label>
+      <input type="text" id="sensitiveVar" placeholder="e.g. Case cost assumption">
+    </div>
+    <div class="field">
+      <label>Risk Level</label>
+      <select id="riskLevel">
+        <option value="">Select…</option>
+        <option>Low</option>
+        <option>Medium</option>
+        <option>High</option>
+      </select>
+    </div>
+    <div class="nav-buttons">
+      <button class="btn btn-secondary" onclick="goStep(5)">← Back</button>
+      <button class="btn btn-primary" onclick="goStep(7)">Next →</button>
+    </div>
+  </div>
+
+  <!-- 7: REFLECTION -->
+  <div class="section" id="step-7">
+    <h2>Reflection</h2>
+    <p class="subtitle">Required thinking before presenting to leadership.</p>
+    <div class="reflection-prompt">Why can't this be solved by product?</div>
+    <div class="field"><textarea id="reflect1" placeholder="Your answer…"></textarea></div>
+    <div class="reflection-prompt">What breaks if nothing is done?</div>
+    <div class="field"><textarea id="reflect2" placeholder="Your answer…"></textarea></div>
+    <div class="reflection-prompt">Is this scaling or local inefficiency?</div>
+    <div class="field"><textarea id="reflect3" placeholder="Your answer…"></textarea></div>
+    <div class="reflection-prompt">Which assumption is least defensible?</div>
+    <div class="field"><textarea id="reflect4" placeholder="Your answer…"></textarea></div>
+    <div class="nav-buttons">
+      <button class="btn btn-secondary" onclick="goStep(6)">← Back</button>
+      <button class="btn btn-primary" onclick="goStep(8)">Next →</button>
+    </div>
+  </div>
+
+  <!-- 8: FINAL MEMO -->
+  <div class="section" id="step-8">
+    <h2>Final Memo</h2>
+    <p class="subtitle">Your leadership-ready investment summary.</p>
+    <div class="memo" id="memoOutput">
+      <h3>ROI Partner — Investment Memo</h3>
+      <div id="memoContent"></div>
+    </div>
+    <div style="text-align:center; margin-top:24px;">
+      <button class="btn btn-export" onclick="exportPDF()">Export as PDF</button>
+      <button class="btn btn-secondary" style="margin-left:12px;" onclick="exportCSV()">Export as CSV</button>
+    </div>
+    <div class="nav-buttons">
+      <button class="btn btn-secondary" onclick="goStep(7)">← Back</button>
+      <span></span>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── Constants (locked) ─────────────────────────────────────────────
+const SYSTEM = {
+  contactCost: 50,
+  xccyTakeRate: 0.006,
+  annualizationFactor: 12,
+  fullyLoadedMultiplier: 1.3,
+};
+
+let currentStep = 0;
+
+// ── Navigation ─────────────────────────────────────────────────────
+function goStep(n) {
+  currentStep = n;
+  document.querySelectorAll('.section').forEach((s, i) => {
+    s.classList.toggle('visible', i === n);
+  });
+  document.querySelectorAll('.steps button').forEach((b, i) => {
+    b.classList.toggle('active', i === n);
+    if (i < n) b.classList.add('done');
+  });
+
+  if (n === 3) updateModelVisibility();
+  if (n === 5) calculateROI();
+  if (n === 8) buildMemo();
+}
+
+document.querySelectorAll('.steps button').forEach(b => {
+  b.addEventListener('click', () => goStep(parseInt(b.dataset.step)));
+});
+
+// ── Model tab toggle ───────────────────────────────────────────────
+function updateModelVisibility() {
+  const path = document.getElementById('valuePath').value;
+  document.getElementById('efficiencyModel').style.display = path === 'Efficiency' ? 'block' : 'none';
+  document.getElementById('growthModel').style.display = path === 'Growth' ? 'block' : 'none';
+  document.getElementById('riskModel').style.display = path === 'Risk' ? 'block' : 'none';
+
+  const titles = { Efficiency: 'Efficiency Model', Growth: 'Growth Model', Risk: 'Risk Model' };
+  document.getElementById('modelTitle').textContent = titles[path] || 'Value Model';
+}
+
+// ── Auto-calc fully loaded cost ────────────────────────────────────
+document.getElementById('baseSalary').addEventListener('input', function() {
+  const base = parseFloat(this.value) || 0;
+  const loaded = base * SYSTEM.fullyLoadedMultiplier;
+  document.getElementById('fullyLoadedCost').value = loaded ? '£' + loaded.toLocaleString('en-GB') : '';
+});
+
+// ── ROI Calculation ────────────────────────────────────────────────
+function calculateROI() {
+  const path = document.getElementById('valuePath').value;
+  let annualValue = 0;
+
+  if (path === 'Efficiency') {
+    const contacts = parseFloat(document.getElementById('contactsReduced').value) || 0;
+    const cases = parseFloat(document.getElementById('casesReduced').value) || 0;
+    const caseCost = parseFloat(document.getElementById('caseCost').value) || 0;
+    annualValue = (contacts * SYSTEM.contactCost) + (cases * caseCost);
+  } else if (path === 'Growth') {
+    const vol = parseFloat(document.getElementById('xccyVolume').value) || 0;
+    annualValue = vol * SYSTEM.xccyTakeRate * SYSTEM.annualizationFactor;
+  } else if (path === 'Risk') {
+    annualValue = parseFloat(document.getElementById('annualImpact').value) || 0;
+  }
+
+  const salary = parseFloat(document.getElementById('baseSalary').value) || 0;
+  const cost = salary * SYSTEM.fullyLoadedMultiplier;
+  const roiExpected = cost > 0 ? annualValue / cost : 0;
+  const roiConservative = roiExpected * 0.7;
+
+  document.getElementById('roiPath').textContent = path || '—';
+  document.getElementById('roiAnnualValue').textContent = annualValue ? '£' + Math.round(annualValue).toLocaleString('en-GB') : '—';
+  document.getElementById('roiExpected').textContent = roiExpected ? roiExpected.toFixed(1) + '×' : '—';
+  document.getElementById('roiConservative').textContent = roiConservative ? roiConservative.toFixed(1) + '×' : '—';
+
+  // Colour coding
+  colourCard('roiExpectedCard', roiExpected);
+  colourCard('roiConservativeCard', roiConservative);
+
+  // Recommendation
+  const rec = document.getElementById('roiRecommendation');
+  if (roiExpected >= 3) {
+    rec.textContent = 'Strong Case';
+    rec.style.background = 'var(--green)';
+  } else if (roiExpected >= 2) {
+    rec.textContent = 'Borderline';
+    rec.style.background = 'var(--amber)';
+  } else {
+    rec.textContent = roiExpected > 0 ? 'Weak Case' : '—';
+    rec.style.background = roiExpected > 0 ? 'var(--red)' : 'var(--muted)';
+  }
+}
+
+function colourCard(id, val) {
+  const el = document.getElementById(id);
+  el.className = 'roi-card';
+  if (val >= 3) el.classList.add('green');
+  else if (val >= 2) el.classList.add('amber');
+  else if (val > 0) el.classList.add('red');
+  else el.classList.add('neutral');
+}
+
+// ── Build Memo ─────────────────────────────────────────────────────
+function buildMemo() {
+  calculateROI();
+  const path = document.getElementById('valuePath').value;
+  const salary = parseFloat(document.getElementById('baseSalary').value) || 0;
+  const cost = salary * SYSTEM.fullyLoadedMultiplier;
+
+  let annualValue = 0;
+  if (path === 'Efficiency') {
+    const contacts = parseFloat(document.getElementById('contactsReduced').value) || 0;
+    const cases = parseFloat(document.getElementById('casesReduced').value) || 0;
+    const caseCost = parseFloat(document.getElementById('caseCost').value) || 0;
+    annualValue = (contacts * SYSTEM.contactCost) + (cases * caseCost);
+  } else if (path === 'Growth') {
+    const vol = parseFloat(document.getElementById('xccyVolume').value) || 0;
+    annualValue = vol * SYSTEM.xccyTakeRate * SYSTEM.annualizationFactor;
+  } else if (path === 'Risk') {
+    annualValue = parseFloat(document.getElementById('annualImpact').value) || 0;
+  }
+
+  const roiExpected = cost > 0 ? annualValue / cost : 0;
+  const roiConservative = roiExpected * 0.7;
+  const rec = roiExpected >= 3 ? 'Strong Case' : roiExpected >= 2 ? 'Borderline' : 'Weak Case';
+  const recColour = roiExpected >= 3 ? 'var(--green)' : roiExpected >= 2 ? 'var(--amber)' : 'var(--red)';
+
+  const rows = [
+    ['Problem Summary', document.getElementById('problemStatement').value || '—'],
+    ['Metric Impacted', document.getElementById('metricImpacted').value || '—'],
+    ['Value Path', path || '—'],
+    ['Role Level', document.getElementById('roleLevel').value || '—'],
+    ['Fully Loaded Cost', cost ? '£' + Math.round(cost).toLocaleString('en-GB') : '—'],
+    ['Annual Value', annualValue ? '£' + Math.round(annualValue).toLocaleString('en-GB') : '—'],
+    ['ROI Expected', roiExpected ? roiExpected.toFixed(1) + '×' : '—'],
+    ['ROI Conservative', roiConservative ? roiConservative.toFixed(1) + '×' : '—'],
+    ['Primary Driver', document.getElementById('primaryDriver').value || '—'],
+    ['Risk Level', document.getElementById('riskLevel').value || '—'],
+  ];
+
+  let html = rows.map(([l, v]) =>
+    `<div class="memo-row"><span class="memo-label">${l}</span><span class="memo-value">${v}</span></div>`
+  ).join('');
+
+  html += `<div style="text-align:center; margin-top:20px; padding-top:16px; border-top:2px solid var(--slate);">
+    <span style="font-size:12px; text-transform:uppercase; letter-spacing:1px; color:var(--muted);">Recommendation</span><br>
+    <span class="recommendation-badge" style="background:${recColour}">${rec}</span>
+  </div>`;
+
+  // Reflection answers
+  const reflections = [
+    ['Why can\'t this be solved by product?', document.getElementById('reflect1').value],
+    ['What breaks if nothing is done?', document.getElementById('reflect2').value],
+    ['Is this scaling or local inefficiency?', document.getElementById('reflect3').value],
+    ['Which assumption is least defensible?', document.getElementById('reflect4').value],
+  ].filter(([, v]) => v.trim());
+
+  if (reflections.length) {
+    html += `<div style="margin-top:24px; padding-top:16px; border-top:1px solid var(--border);">
+      <div style="font-size:13px; font-weight:600; margin-bottom:12px; color:var(--muted);">REFLECTION</div>`;
+    reflections.forEach(([q, a]) => {
+      html += `<div style="margin-bottom:12px;">
+        <div style="font-size:12px; font-weight:600; color:var(--slate);">${q}</div>
+        <div style="font-size:13px; color:var(--text); margin-top:2px;">${a}</div>
+      </div>`;
+    });
+    html += `</div>`;
+  }
+
+  document.getElementById('memoContent').innerHTML = html;
+}
+
+// ── Export PDF (via print) ─────────────────────────────────────────
+function exportPDF() {
+  const memo = document.getElementById('step-8');
+  memo.classList.add('print-target');
+  window.print();
+  memo.classList.remove('print-target');
+}
+
+// ── Export CSV ──────────────────────────────────────────────────────
+function exportCSV() {
+  const path = document.getElementById('valuePath').value;
+  const salary = parseFloat(document.getElementById('baseSalary').value) || 0;
+  const cost = salary * SYSTEM.fullyLoadedMultiplier;
+
+  let annualValue = 0;
+  if (path === 'Efficiency') {
+    const contacts = parseFloat(document.getElementById('contactsReduced').value) || 0;
+    const cases = parseFloat(document.getElementById('casesReduced').value) || 0;
+    const caseCost = parseFloat(document.getElementById('caseCost').value) || 0;
+    annualValue = (contacts * SYSTEM.contactCost) + (cases * caseCost);
+  } else if (path === 'Growth') {
+    const vol = parseFloat(document.getElementById('xccyVolume').value) || 0;
+    annualValue = vol * SYSTEM.xccyTakeRate * SYSTEM.annualizationFactor;
+  } else if (path === 'Risk') {
+    annualValue = parseFloat(document.getElementById('annualImpact').value) || 0;
+  }
+
+  const roiExpected = cost > 0 ? annualValue / cost : 0;
+  const roiConservative = roiExpected * 0.7;
+  const rec = roiExpected >= 3 ? 'Strong Case' : roiExpected >= 2 ? 'Borderline' : 'Weak Case';
+
+  const esc = v => `"${String(v).replace(/"/g, '""')}"`;
+  const rows = [
+    ['Field', 'Value'],
+    ['Problem Summary', document.getElementById('problemStatement').value],
+    ['Metric Impacted', document.getElementById('metricImpacted').value],
+    ['Value Path', path],
+    ['Role Level', document.getElementById('roleLevel').value],
+    ['Base Salary', salary],
+    ['Fully Loaded Cost', Math.round(cost)],
+    ['Annual Value', Math.round(annualValue)],
+    ['ROI Expected', roiExpected.toFixed(2)],
+    ['ROI Conservative', roiConservative.toFixed(2)],
+    ['Recommendation', rec],
+    ['Primary Driver', document.getElementById('primaryDriver').value],
+    ['Most Sensitive Variable', document.getElementById('sensitiveVar').value],
+    ['Risk Level', document.getElementById('riskLevel').value],
+    ['Reflection: Why not product?', document.getElementById('reflect1').value],
+    ['Reflection: What breaks?', document.getElementById('reflect2').value],
+    ['Reflection: Scaling or local?', document.getElementById('reflect3').value],
+    ['Reflection: Least defensible?', document.getElementById('reflect4').value],
+  ];
+
+  const csv = rows.map(r => r.map(esc).join(',')).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'ROI_Partner_Memo.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+</script>
+
+</body>
+</html>
