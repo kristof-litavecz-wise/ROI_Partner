@@ -324,7 +324,11 @@
       <tr><td>XCCY Take Rate</td><td>0.006</td><td><span class="lock-badge">LOCKED</span></td></tr>
       <tr><td>Annualization Factor</td><td>12</td><td><span class="lock-badge">LOCKED</span></td></tr>
       <tr><td>Fully Loaded Multiplier</td><td>1.3×</td><td><span class="lock-badge">LOCKED</span></td></tr>
-      <tr><td>Case Cost (Standard)</td><td>TBD</td><td><span class="lock-badge">LOCKED</span></td></tr>
+      <tr><td>Cost/Case: CS</td><td>£16.66</td><td><span class="lock-badge">LOCKED</span></td></tr>
+      <tr><td>Cost/Case: Fincrime</td><td>£11.96</td><td><span class="lock-badge">LOCKED</span></td></tr>
+      <tr><td>Cost/Case: KYC</td><td>£8.17</td><td><span class="lock-badge">LOCKED</span></td></tr>
+      <tr><td>Cost/Case: Ops</td><td>£5.57</td><td><span class="lock-badge">LOCKED</span></td></tr>
+      <tr><td>Cost/Case: Servicing</td><td>£9.91</td><td><span class="lock-badge">LOCKED</span></td></tr>
     </table>
     <div class="nav-buttons">
       <span></span>
@@ -337,34 +341,54 @@
     <h2>Define the Problem</h2>
     <p class="subtitle">Be specific and measurable. No vague phrasing like "efficiency improvement".</p>
     <div class="field">
-      <label>Problem Statement <span class="hint">— must be measurable</span></label>
+      <label>PM <span class="hint">— responsible project/people manager</span></label>
+      <input type="text" id="inputPM" placeholder="e.g. Jane Smith">
+    </div>
+    <div class="field">
+      <label>Role <span class="hint">— the role being justified</span></label>
+      <input type="text" id="inputRole" placeholder="e.g. BizOps Analyst — Payments">
+    </div>
+    <div class="field">
+      <label>Name <span class="hint">— if someone is already in the role</span></label>
+      <input type="text" id="inputName" placeholder="Leave blank if vacant">
+    </div>
+    <div class="field">
+      <label>Squad</label>
+      <input type="text" id="inputSquad" placeholder="e.g. Payments Ops">
+    </div>
+    <div class="field">
+      <label>Problem Statement <span class="hint">— why is this role important?</span></label>
       <textarea id="problemStatement" placeholder="e.g. Manual reconciliation of XCCY trades takes 4 hours per day across the team"></textarea>
     </div>
     <div class="field">
-      <label>Metric Impacted</label>
-      <select id="metricImpacted">
+      <label>R Number</label>
+      <input type="text" id="inputRNumber" placeholder="e.g. R-1234">
+    </div>
+    <div class="field">
+      <label>Growth / Existing</label>
+      <select id="inputGrowthExisting">
         <option value="">Select…</option>
-        <option>Time</option>
-        <option>Cost</option>
-        <option>Revenue</option>
-        <option>Risk</option>
+        <option>Growth</option>
+        <option>Existing</option>
       </select>
     </div>
     <div class="field">
-      <label>Baseline Value</label>
-      <input type="number" id="baselineValue" placeholder="Current state (e.g. 4)">
+      <label>Main KPI</label>
+      <select id="inputMainKPI">
+        <option value="">Select…</option>
+        <option>SLA</option>
+        <option>Quality</option>
+        <option>Compliance</option>
+        <option>Cost</option>
+      </select>
     </div>
     <div class="field">
-      <label>Target Value</label>
-      <input type="number" id="targetValue" placeholder="Desired state (e.g. 1)">
+      <label>KPIs Shipped <span class="hint">— key results delivered</span></label>
+      <textarea id="inputKPIsShipped" placeholder="e.g. Reduced SLA breach rate from 12% to 3%"></textarea>
     </div>
     <div class="field">
-      <label>Annual Volume</label>
-      <input type="number" id="annualVolume" placeholder="e.g. 52000">
-    </div>
-    <div class="field">
-      <label>Annual Financial Impact (£)</label>
-      <input type="number" id="annualImpact" placeholder="e.g. 120000">
+      <label>Projects Shipped / To Be Shipped Next Quarter</label>
+      <textarea id="inputProjects" placeholder="e.g. Automated payment matching (shipped), Vendor onboarding revamp (next quarter)"></textarea>
     </div>
     <div class="nav-buttons">
       <button class="btn btn-secondary" onclick="goStep(0)">← Back</button>
@@ -419,7 +443,86 @@
     </div>
 
     <div id="riskModel" style="display:none;">
-      <div class="banner">Risk path uses the Annual Financial Impact from Step 1 as the value basis.</div>
+      <div class="field">
+        <label>Risk Sub-Type</label>
+        <select id="riskSubType" onchange="updateRiskSubType()">
+          <option value="">Select…</option>
+          <option value="Compliance">Compliance / Regulatory Mandate</option>
+          <option value="Precision">Precision Improvement</option>
+        </select>
+      </div>
+
+      <div id="riskCompliance" style="display:none;">
+        <div class="banner">Estimate value from remediation costs + regulatory penalty avoidance.</div>
+        <div class="field">
+          <label>Team <span class="hint">— auto-fills cost per case</span></label>
+          <select id="riskTeam" onchange="updateRiskCostPerCase()">
+            <option value="">Select…</option>
+            <option value="CS">CS (£16.66/case)</option>
+            <option value="Fincrime">Fincrime (£11.96/case)</option>
+            <option value="KYC">KYC (£8.17/case)</option>
+            <option value="Ops">Ops (£5.57/case)</option>
+            <option value="Servicing">Servicing (£9.91/case)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Cost Per Case (£) <span class="hint">— from system data, 12M average</span></label>
+          <input type="text" id="riskCostPerCase" readonly style="background:#E5E7EB; font-weight:600;">
+        </div>
+        <div class="field">
+          <label>Customers to Remediate <span class="hint">— volume impacted</span></label>
+          <input type="number" id="riskRemediationVolume" placeholder="e.g. 10000">
+        </div>
+        <div class="field">
+          <label>Penalty Severity <span class="hint">— estimated regulatory exposure if not addressed</span></label>
+          <select id="riskPenaltySeverity">
+            <option value="">Select…</option>
+            <option value="250000">Minor (£250K)</option>
+            <option value="2000000">Moderate (£2M)</option>
+            <option value="10000000">Severe (£10M+)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Probability of Enforcement</label>
+          <select id="riskPenaltyProbability">
+            <option value="">Select…</option>
+            <option value="0.1">Low (10%)</option>
+            <option value="0.3">Medium (30%)</option>
+            <option value="0.6">High (60%)</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="riskPrecision" style="display:none;">
+        <div class="banner">Estimate value from reducing false positives through better precision.</div>
+        <div class="field">
+          <label>Team <span class="hint">— auto-fills cost per case</span></label>
+          <select id="riskPrecisionTeam" onchange="updatePrecisionCostPerCase()">
+            <option value="">Select…</option>
+            <option value="CS">CS (£16.66/case)</option>
+            <option value="Fincrime">Fincrime (£11.96/case)</option>
+            <option value="KYC">KYC (£8.17/case)</option>
+            <option value="Ops">Ops (£5.57/case)</option>
+            <option value="Servicing">Servicing (£9.91/case)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Cost Per Case (£)</label>
+          <input type="text" id="riskPrecisionCostPerCase" readonly style="background:#E5E7EB; font-weight:600;">
+        </div>
+        <div class="field">
+          <label>Current Annual Review Volume</label>
+          <input type="number" id="riskReviewVolume" placeholder="e.g. 50000">
+        </div>
+        <div class="field">
+          <label>Current Precision (%) <span class="hint">— from Looker explore</span></label>
+          <input type="number" id="riskCurrentPrecision" min="0" max="100" placeholder="e.g. 20">
+        </div>
+        <div class="field">
+          <label>Target Precision (%) <span class="hint">— your estimate after improvement</span></label>
+          <input type="number" id="riskTargetPrecision" min="0" max="100" placeholder="e.g. 45">
+        </div>
+      </div>
     </div>
 
     <div class="nav-buttons">
@@ -561,6 +664,7 @@ const SYSTEM = {
   xccyTakeRate: 0.006,
   annualizationFactor: 12,
   fullyLoadedMultiplier: 1.3,
+  costPerCase: { CS: 16.66, Fincrime: 11.96, KYC: 8.17, Ops: 5.57, Servicing: 9.91 },
 };
 
 let currentStep = 0;
@@ -591,9 +695,56 @@ function updateModelVisibility() {
   document.getElementById('efficiencyModel').style.display = path === 'Efficiency' ? 'block' : 'none';
   document.getElementById('growthModel').style.display = path === 'Growth' ? 'block' : 'none';
   document.getElementById('riskModel').style.display = path === 'Risk' ? 'block' : 'none';
+  if (path === 'Risk') updateRiskSubType();
 
   const titles = { Efficiency: 'Efficiency Model', Growth: 'Growth Model', Risk: 'Risk Model' };
   document.getElementById('modelTitle').textContent = titles[path] || 'Value Model';
+}
+
+// ── Risk sub-type toggle ──────────────────────────────────────────
+function updateRiskSubType() {
+  const sub = document.getElementById('riskSubType').value;
+  document.getElementById('riskCompliance').style.display = sub === 'Compliance' ? 'block' : 'none';
+  document.getElementById('riskPrecision').style.display = sub === 'Precision' ? 'block' : 'none';
+}
+
+function updateRiskCostPerCase() {
+  const team = document.getElementById('riskTeam').value;
+  document.getElementById('riskCostPerCase').value = team ? '£' + SYSTEM.costPerCase[team].toFixed(2) : '';
+}
+
+function updatePrecisionCostPerCase() {
+  const team = document.getElementById('riskPrecisionTeam').value;
+  document.getElementById('riskPrecisionCostPerCase').value = team ? '£' + SYSTEM.costPerCase[team].toFixed(2) : '';
+}
+
+function calculateRiskValue() {
+  const sub = document.getElementById('riskSubType').value;
+  if (sub === 'Compliance') {
+    const team = document.getElementById('riskTeam').value;
+    const cpc = team ? SYSTEM.costPerCase[team] : 0;
+    const vol = parseFloat(document.getElementById('riskRemediationVolume').value) || 0;
+    const penalty = parseFloat(document.getElementById('riskPenaltySeverity').value) || 0;
+    const prob = parseFloat(document.getElementById('riskPenaltyProbability').value) || 0;
+    const remediationCost = vol * cpc;
+    const expectedPenalty = penalty * prob;
+    return remediationCost + expectedPenalty;
+  } else if (sub === 'Precision') {
+    const team = document.getElementById('riskPrecisionTeam').value;
+    const cpc = team ? SYSTEM.costPerCase[team] : 0;
+    const volume = parseFloat(document.getElementById('riskReviewVolume').value) || 0;
+    const currentP = (parseFloat(document.getElementById('riskCurrentPrecision').value) || 0) / 100;
+    const targetP = (parseFloat(document.getElementById('riskTargetPrecision').value) || 0) / 100;
+    if (targetP <= 0 || currentP <= 0) return 0;
+    // Current false positives vs target false positives at same true positive volume
+    const truePositives = volume * currentP;
+    const currentFP = volume - truePositives;
+    const newVolume = truePositives / targetP;
+    const newFP = newVolume - truePositives;
+    const reviewsSaved = currentFP - newFP;
+    return reviewsSaved * cpc;
+  }
+  return 0;
 }
 
 // ── Auto-calc fully loaded cost ────────────────────────────────────
@@ -617,7 +768,7 @@ function calculateROI() {
     const vol = parseFloat(document.getElementById('xccyVolume').value) || 0;
     annualValue = vol * SYSTEM.xccyTakeRate * SYSTEM.annualizationFactor;
   } else if (path === 'Risk') {
-    annualValue = parseFloat(document.getElementById('annualImpact').value) || 0;
+    annualValue = calculateRiskValue();
   }
 
   const salary = parseFloat(document.getElementById('baseSalary').value) || 0;
@@ -674,7 +825,7 @@ function buildMemo() {
     const vol = parseFloat(document.getElementById('xccyVolume').value) || 0;
     annualValue = vol * SYSTEM.xccyTakeRate * SYSTEM.annualizationFactor;
   } else if (path === 'Risk') {
-    annualValue = parseFloat(document.getElementById('annualImpact').value) || 0;
+    annualValue = calculateRiskValue();
   }
 
   const roiExpected = cost > 0 ? annualValue / cost : 0;
@@ -683,8 +834,16 @@ function buildMemo() {
   const recColour = roiExpected >= 3 ? 'var(--green)' : roiExpected >= 2 ? 'var(--amber)' : 'var(--red)';
 
   const rows = [
+    ['PM', document.getElementById('inputPM').value || '—'],
+    ['Role', document.getElementById('inputRole').value || '—'],
+    ['Name', document.getElementById('inputName').value || 'Vacant'],
+    ['Squad', document.getElementById('inputSquad').value || '—'],
+    ['R Number', document.getElementById('inputRNumber').value || '—'],
+    ['Growth / Existing', document.getElementById('inputGrowthExisting').value || '—'],
     ['Problem Summary', document.getElementById('problemStatement').value || '—'],
-    ['Metric Impacted', document.getElementById('metricImpacted').value || '—'],
+    ['Main KPI', document.getElementById('inputMainKPI').value || '—'],
+    ['KPIs Shipped', document.getElementById('inputKPIsShipped').value || '—'],
+    ['Projects Shipped / Next Quarter', document.getElementById('inputProjects').value || '—'],
     ['Value Path', path || '—'],
     ['Role Level', document.getElementById('roleLevel').value || '—'],
     ['Fully Loaded Cost', cost ? '£' + Math.round(cost).toLocaleString('en-GB') : '—'],
@@ -751,7 +910,7 @@ function exportCSV() {
     const vol = parseFloat(document.getElementById('xccyVolume').value) || 0;
     annualValue = vol * SYSTEM.xccyTakeRate * SYSTEM.annualizationFactor;
   } else if (path === 'Risk') {
-    annualValue = parseFloat(document.getElementById('annualImpact').value) || 0;
+    annualValue = calculateRiskValue();
   }
 
   const roiExpected = cost > 0 ? annualValue / cost : 0;
@@ -761,8 +920,16 @@ function exportCSV() {
   const esc = v => `"${String(v).replace(/"/g, '""')}"`;
   const rows = [
     ['Field', 'Value'],
+    ['PM', document.getElementById('inputPM').value],
+    ['Role', document.getElementById('inputRole').value],
+    ['Name', document.getElementById('inputName').value || 'Vacant'],
+    ['Squad', document.getElementById('inputSquad').value],
+    ['R Number', document.getElementById('inputRNumber').value],
+    ['Growth / Existing', document.getElementById('inputGrowthExisting').value],
     ['Problem Summary', document.getElementById('problemStatement').value],
-    ['Metric Impacted', document.getElementById('metricImpacted').value],
+    ['Main KPI', document.getElementById('inputMainKPI').value],
+    ['KPIs Shipped', document.getElementById('inputKPIsShipped').value],
+    ['Projects Shipped / Next Quarter', document.getElementById('inputProjects').value],
     ['Value Path', path],
     ['Role Level', document.getElementById('roleLevel').value],
     ['Base Salary', salary],
