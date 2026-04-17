@@ -308,9 +308,8 @@
     <button data-step="3">Model</button>
     <button data-step="4">Cost</button>
     <button data-step="5">ROI</button>
-    <button data-step="6">Sensitivity</button>
-    <button data-step="7">Reflection</button>
-    <button data-step="8">Memo</button>
+    <button data-step="6">Reflection</button>
+    <button data-step="7">Memo</button>
   </div>
 
   <!-- 0: SYSTEM RULES -->
@@ -536,18 +535,17 @@
     <h2>Cost Model</h2>
     <p class="subtitle">Enter the details of the role you're justifying.</p>
     <div class="field">
-      <label>Role Level</label>
-      <select id="roleLevel">
+      <label>Role Level <span class="hint">— auto-fills London mid-point salary</span></label>
+      <select id="roleLevel" onchange="updateSalaryFromRole()">
         <option value="">Select…</option>
-        <option>Analyst</option>
-        <option>Associate</option>
-        <option>Manager</option>
-        <option>Senior Manager</option>
-        <option>Director</option>
+        <option value="75000">Associate Manager / Academy — L5 (£66K–£84K)</option>
+        <option value="96500">Manager — L6 (£83K–£110K)</option>
+        <option value="125000">Head of — L7 (£110K–£140K)</option>
+        <option value="155000">Director — L8 (£140K–£170K)</option>
       </select>
     </div>
     <div class="field">
-      <label>Base Salary (£)</label>
+      <label>Base Salary (£) <span class="hint">— override if needed</span></label>
       <input type="number" id="baseSalary" placeholder="e.g. 55000">
     </div>
     <div class="field">
@@ -592,35 +590,8 @@
     </div>
   </div>
 
-  <!-- 6: SENSITIVITY -->
+  <!-- 6: REFLECTION -->
   <div class="section" id="step-6">
-    <h2>Sensitivity Analysis</h2>
-    <p class="subtitle">Identify what changes ROI most significantly.</p>
-    <div class="field">
-      <label>Primary Driver</label>
-      <input type="text" id="primaryDriver" placeholder="e.g. Contact volume reduction">
-    </div>
-    <div class="field">
-      <label>Most Sensitive Variable</label>
-      <input type="text" id="sensitiveVar" placeholder="e.g. Case cost assumption">
-    </div>
-    <div class="field">
-      <label>Risk Level</label>
-      <select id="riskLevel">
-        <option value="">Select…</option>
-        <option>Low</option>
-        <option>Medium</option>
-        <option>High</option>
-      </select>
-    </div>
-    <div class="nav-buttons">
-      <button class="btn btn-secondary" onclick="goStep(5)">← Back</button>
-      <button class="btn btn-primary" onclick="goStep(7)">Next →</button>
-    </div>
-  </div>
-
-  <!-- 7: REFLECTION -->
-  <div class="section" id="step-7">
     <h2>Reflection</h2>
     <p class="subtitle">Required thinking before presenting to leadership.</p>
     <div class="reflection-prompt">Why can't this be solved by product?</div>
@@ -632,13 +603,13 @@
     <div class="reflection-prompt">Which assumption is least defensible?</div>
     <div class="field"><textarea id="reflect4" placeholder="Your answer…"></textarea></div>
     <div class="nav-buttons">
-      <button class="btn btn-secondary" onclick="goStep(6)">← Back</button>
-      <button class="btn btn-primary" onclick="goStep(8)">Next →</button>
+      <button class="btn btn-secondary" onclick="goStep(5)">← Back</button>
+      <button class="btn btn-primary" onclick="goStep(7)">Next →</button>
     </div>
   </div>
 
-  <!-- 8: FINAL MEMO -->
-  <div class="section" id="step-8">
+  <!-- 7: FINAL MEMO -->
+  <div class="section" id="step-7">
     <h2>Final Memo</h2>
     <p class="subtitle">Your leadership-ready investment summary.</p>
     <div class="memo" id="memoOutput">
@@ -646,11 +617,13 @@
       <div id="memoContent"></div>
     </div>
     <div style="text-align:center; margin-top:24px;">
-      <button class="btn btn-export" onclick="exportPDF()">Export as PDF</button>
+      <button class="btn btn-export" onclick="saveToSheet()">Save to Database</button>
+      <button class="btn btn-secondary" style="margin-left:12px;" onclick="exportPDF()">Export as PDF</button>
       <button class="btn btn-secondary" style="margin-left:12px;" onclick="exportCSV()">Export as CSV</button>
     </div>
+    <div id="saveStatus" style="text-align:center; margin-top:12px; font-size:13px;"></div>
     <div class="nav-buttons">
-      <button class="btn btn-secondary" onclick="goStep(7)">← Back</button>
+      <button class="btn btn-secondary" onclick="goStep(6)">← Back</button>
       <span></span>
     </div>
   </div>
@@ -659,6 +632,10 @@
 
 <script>
 // ── Constants (locked) ─────────────────────────────────────────────
+// ── Google Sheets backend URL ──────────────────────────────────────
+// Replace with your deployed Apps Script web app URL
+const SAVE_URL = 'https://script.google.com/a/macros/wise.com/s/AKfycbz8ZGnvKBE-ROW5tnTPGnUPBRc_tLV2mi0kgb-qltIYrkhpriRp1oJKJmUAnb-VyVooLg/exec';
+
 const SYSTEM = {
   contactCost: 50,
   xccyTakeRate: 0.006,
@@ -682,7 +659,7 @@ function goStep(n) {
 
   if (n === 3) updateModelVisibility();
   if (n === 5) calculateROI();
-  if (n === 8) buildMemo();
+  if (n === 7) buildMemo();
 }
 
 document.querySelectorAll('.steps button').forEach(b => {
@@ -748,6 +725,14 @@ function calculateRiskValue() {
 }
 
 // ── Auto-calc fully loaded cost ────────────────────────────────────
+function updateSalaryFromRole() {
+  const val = document.getElementById('roleLevel').value;
+  if (val) {
+    document.getElementById('baseSalary').value = val;
+    document.getElementById('baseSalary').dispatchEvent(new Event('input'));
+  }
+}
+
 document.getElementById('baseSalary').addEventListener('input', function() {
   const base = parseFloat(this.value) || 0;
   const loaded = base * SYSTEM.fullyLoadedMultiplier;
@@ -850,8 +835,6 @@ function buildMemo() {
     ['Annual Value', annualValue ? '£' + Math.round(annualValue).toLocaleString('en-GB') : '—'],
     ['ROI Expected', roiExpected ? roiExpected.toFixed(1) + '×' : '—'],
     ['ROI Conservative', roiConservative ? roiConservative.toFixed(1) + '×' : '—'],
-    ['Primary Driver', document.getElementById('primaryDriver').value || '—'],
-    ['Risk Level', document.getElementById('riskLevel').value || '—'],
   ];
 
   let html = rows.map(([l, v]) =>
@@ -888,7 +871,7 @@ function buildMemo() {
 
 // ── Export PDF (via print) ─────────────────────────────────────────
 function exportPDF() {
-  const memo = document.getElementById('step-8');
+  const memo = document.getElementById('step-7');
   memo.classList.add('print-target');
   window.print();
   memo.classList.remove('print-target');
@@ -938,9 +921,6 @@ function exportCSV() {
     ['ROI Expected', roiExpected.toFixed(2)],
     ['ROI Conservative', roiConservative.toFixed(2)],
     ['Recommendation', rec],
-    ['Primary Driver', document.getElementById('primaryDriver').value],
-    ['Most Sensitive Variable', document.getElementById('sensitiveVar').value],
-    ['Risk Level', document.getElementById('riskLevel').value],
     ['Reflection: Why not product?', document.getElementById('reflect1').value],
     ['Reflection: What breaks?', document.getElementById('reflect2').value],
     ['Reflection: Scaling or local?', document.getElementById('reflect3').value],
@@ -955,6 +935,95 @@ function exportCSV() {
   a.download = 'ROI_Partner_Memo.csv';
   a.click();
   URL.revokeObjectURL(url);
+}
+
+// ── Save to Google Sheet ───────────────────────────────────────────
+function saveToSheet() {
+  const status = document.getElementById('saveStatus');
+
+  if (SAVE_URL === 'PASTE_YOUR_WEB_APP_URL_HERE') {
+    status.innerHTML = '<span style="color:var(--red);">Setup needed — see SaveBackend.gs for instructions</span>';
+    return;
+  }
+
+  const path = document.getElementById('valuePath').value;
+  const salary = parseFloat(document.getElementById('baseSalary').value) || 0;
+  const cost = salary * SYSTEM.fullyLoadedMultiplier;
+  const annualValue = getAnnualValue(path);
+  const roiExpected = cost > 0 ? annualValue / cost : 0;
+  const roiConservative = roiExpected * 0.7;
+  const rec = roiExpected >= 3 ? 'Strong Case' : roiExpected >= 2 ? 'Borderline' : 'Weak Case';
+
+  const payload = {
+    pm: document.getElementById('inputPM').value,
+    role: document.getElementById('inputRole').value,
+    name: document.getElementById('inputName').value,
+    squad: document.getElementById('inputSquad').value,
+    problemStatement: document.getElementById('problemStatement').value,
+    rNumber: document.getElementById('inputRNumber').value,
+    growthExisting: document.getElementById('inputGrowthExisting').value,
+    mainKPI: document.getElementById('inputMainKPI').value,
+    kpisShipped: document.getElementById('inputKPIsShipped').value,
+    projects: document.getElementById('inputProjects').value,
+    valuePath: path,
+    riskSubType: path === 'Risk' ? document.getElementById('riskSubType').value : '',
+    riskTeam: path === 'Risk' ? (document.getElementById('riskTeam').value || '') : '',
+    remediationVolume: path === 'Risk' ? (document.getElementById('riskRemediationVolume').value || '') : '',
+    penaltySeverity: path === 'Risk' ? (document.getElementById('riskPenaltySeverity').value || '') : '',
+    penaltyProbability: path === 'Risk' ? (document.getElementById('riskPenaltyProbability').value || '') : '',
+    precisionTeam: path === 'Risk' ? (document.getElementById('riskPrecisionTeam').value || '') : '',
+    reviewVolume: path === 'Risk' ? (document.getElementById('riskReviewVolume').value || '') : '',
+    currentPrecision: path === 'Risk' ? (document.getElementById('riskCurrentPrecision').value || '') : '',
+    targetPrecision: path === 'Risk' ? (document.getElementById('riskTargetPrecision').value || '') : '',
+    contactsReduced: path === 'Efficiency' ? (document.getElementById('contactsReduced').value || '') : '',
+    casesReduced: path === 'Efficiency' ? (document.getElementById('casesReduced').value || '') : '',
+    caseCost: path === 'Efficiency' ? (document.getElementById('caseCost').value || '') : '',
+    xccyVolume: path === 'Growth' ? (document.getElementById('xccyVolume').value || '') : '',
+    roleLevel: document.getElementById('roleLevel').selectedOptions[0]?.text || '',
+    baseSalary: salary,
+    fullyLoadedCost: Math.round(cost),
+    annualValue: Math.round(annualValue),
+    roiExpected: roiExpected.toFixed(2),
+    roiConservative: roiConservative.toFixed(2),
+    recommendation: rec,
+    reflect1: document.getElementById('reflect1').value,
+    reflect2: document.getElementById('reflect2').value,
+    reflect3: document.getElementById('reflect3').value,
+    reflect4: document.getElementById('reflect4').value,
+  };
+
+  status.innerHTML = '<span style="color:var(--muted);">Saving...</span>';
+
+  // Google Apps Script doesn't support CORS for POST with JSON body.
+  // Workaround: send as a form-encoded request via a hidden form targeting an iframe,
+  // or use the redirect-based approach with a GET-style POST.
+  // Simplest reliable method: POST the JSON as a query param to doGet.
+  const url = SAVE_URL + '?data=' + encodeURIComponent(JSON.stringify(payload));
+
+  fetch(url, { method: 'GET', mode: 'no-cors' })
+  .then(() => {
+    status.innerHTML = '<span style="color:var(--green); font-weight:600;">Saved successfully</span>';
+    setTimeout(() => { status.innerHTML = ''; }, 3000);
+  })
+  .catch(err => {
+    status.innerHTML = '<span style="color:var(--red);">Save failed — ' + err.message + '</span>';
+  });
+}
+
+// ── Shared annual value helper ─────────────────────────────────────
+function getAnnualValue(path) {
+  if (path === 'Efficiency') {
+    const contacts = parseFloat(document.getElementById('contactsReduced').value) || 0;
+    const cases = parseFloat(document.getElementById('casesReduced').value) || 0;
+    const caseCost = parseFloat(document.getElementById('caseCost').value) || 0;
+    return (contacts * SYSTEM.contactCost) + (cases * caseCost);
+  } else if (path === 'Growth') {
+    const vol = parseFloat(document.getElementById('xccyVolume').value) || 0;
+    return vol * SYSTEM.xccyTakeRate * SYSTEM.annualizationFactor;
+  } else if (path === 'Risk') {
+    return calculateRiskValue();
+  }
+  return 0;
 }
 </script>
 
